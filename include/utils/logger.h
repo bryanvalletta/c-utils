@@ -46,7 +46,12 @@ enum log_levels {
 #define LOGGER_FLAG_HAS_PREFIX             0x00000002
 #define LOGGER_FLAG_PREFIX_ALLOC           0x00000004
 
+#ifndef CONFIG_LOGGER_PORT
+
 int logger_log(logger_t *ctx, int log_level, const char *tag, const char *fmt, ...);
+
+#endif
+
 void logger_set_log_level(logger_t *ctx, int log_level);
 void logger_set_put_fn(logger_t *ctx, log_puts_fn_t fn);
 void logger_set_file(logger_t *ctx, FILE *f);
@@ -75,6 +80,8 @@ void logger_set_prefix_const(logger_t *ctx, const char *prefix);
 		return get_ ## mod_name ## _logger_ctx(); \
 	}
 
+#ifndef CONFIG_LOGGER_PORT
+
 #define LOG_EM(...)    logger_log(get_current_logger_ctx(), LOG_EMERG,  LOG_TAG, __VA_ARGS__)
 #define LOG_ALERT(...) logger_log(get_current_logger_ctx(), LOG_ALERT,  LOG_TAG, __VA_ARGS__)
 #define LOG_CRIT(...)  logger_log(get_current_logger_ctx(), LOG_CRIT,   LOG_TAG, __VA_ARGS__)
@@ -84,6 +91,22 @@ void logger_set_prefix_const(logger_t *ctx, const char *prefix);
 #define LOG_NOT(...)   logger_log(get_current_logger_ctx(), LOG_NOTICE, LOG_TAG, __VA_ARGS__)
 #define LOG_DBG(...)   logger_log(get_current_logger_ctx(), LOG_DEBUG,  LOG_TAG, __VA_ARGS__)
 #define LOG_PRINT(...) logger_log(get_current_logger_ctx(), LOG_INFO,   LOG_TAG, __VA_ARGS__)
+
+#else
+
+#include <lib/logger.h>
+
+#define LOG_EM(...)    LOG(UEXP, __VA_ARGS__)
+#define LOG_ALERT(...) LOG(UEXP, __VA_ARGS__)
+#define LOG_CRIT(...)  LOG(UEXP, __VA_ARGS__)
+#define LOG_ERR(...)   LOG(DERR, __VA_ARGS__)
+#define LOG_INF(...)   LOG(DSTS, __VA_ARGS__)
+#define LOG_WRN(...)   LOG(DWRN, __VA_ARGS__)
+#define LOG_NOT(...)   LOG(DWRN, __VA_ARGS__)
+#define LOG_DBG(...)   LOG(DSTS, __VA_ARGS__)
+#define LOG_PRINT(...) LOG(DSTS, __VA_ARGS__)
+
+#endif
 
 #define LOG_SET_PREFIX(...) logger_set_prefix(get_current_logger_ctx(), __VA_ARGS__);
 #define LOG_SET_PREFIX_CONST(str) logger_set_prefix_const(get_current_logger_ctx(), str);
